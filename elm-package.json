@@ -1,6 +1,6 @@
 {
     "version": "1.0.0",
-    "summary": "helpful summary of your project, less than 80 characters",
+    "summary": "A debouncer using an effects manager",
     "repository": "https://github.com/mceldeen/elm-debouncer.git",
     "license": "BSD3",
     "source-directories": [
