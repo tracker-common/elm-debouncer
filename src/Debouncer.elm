@@ -2,7 +2,7 @@ effect module Debouncer where { command = MyCmd } exposing (debounce)
 
 {-| Most debouncers follow TEA. That's okay, but you have to muddy your update
 function with state and messages that are only for the debouncer. As an effect
-manager it presents a much more minimal and user friendly API.
+manager, it presents a much more minimal and user friendly API.
 
 @docs debounce
 
@@ -30,14 +30,15 @@ type Msg
     = Execute String
 
 
-{-| Debounce takes a key for identification, a duration (in seconds), and two
-mapping functions that turn your task into a `msg`. The idea is that when the
-key and duration are applied in, it should mirror the Task.perform type
-signature.
+{-| Debounce takes a key for identification (which allows you to debounce
+multiple things at once), a duration (in seconds), and two mapping functions
+that turn your task into a `msg`. The idea is that when the key and duration are
+applied in, it should mirror the Task.perform type signature.
 
-  perform : (a -> msg) -> (b -> msg) -> Task a b -> Cmd msg
-  perform =
-    debounce "query" 500
+    perform : (a -> msg) -> (b -> msg) -> Task a b -> Cmd msg
+    perform =
+      debounce "query" 500
+
 -}
 debounce : String -> Float -> (a -> msg) -> (b -> msg) -> Task a b -> Cmd msg
 debounce key delay onFail onSuccess task =
