@@ -1,0 +1,11 @@
+{
+  "name": "elm-debouncer",
+  "version": "0.0.1",
+  "description": "debouncer written in elm as an effect manager",
+  "main": " ",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Matthew Conger-Eldeen <mceldeen@gmail.com>",
+  "license": "MIT"
+}
