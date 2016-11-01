@@ -77,10 +77,8 @@ onEffects router cmds state =
                 updateState v =
                     Dict.insert key v state
             in
-                Process.spawn
-                    (maybeKill (Maybe.map snd <| Dict.get key state)
-                        &> eventuallyExecute router key delay
-                    )
+                maybeKill (Maybe.map snd <| Dict.get key state)
+                    &> Process.spawn (eventuallyExecute router key delay)
                     `Task.andThen` (onEffects router rest
                                         << updateState
                                         << (,) task
