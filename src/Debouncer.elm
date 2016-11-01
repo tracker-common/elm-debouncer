@@ -14,16 +14,20 @@ import Process
 
 
 type alias State msg =
-    Dict String (Task msg msg)
+    Dict String ( Task msg msg, Process.Id )
 
 
 type MyCmd msg
     = Debounce String Float (Task msg msg)
 
 
-cmdMap : (a -> b) -> MyCmd msg -> MyCmd msg
-cmdMap _ (Debounce key delay task) =
-    Debounce key delay task
+cmdMap : (a -> b) -> MyCmd a -> MyCmd b
+cmdMap f (Debounce key delay task) =
+    let
+        mapTask =
+            Task.mapError f << Task.map f
+    in
+        Debounce key delay (mapTask task)
 
 
 type Msg
@@ -31,9 +35,9 @@ type Msg
 
 
 {-| Debounce takes a key for identification (which allows you to debounce
-multiple things at once), a duration (in seconds), and two mapping functions
-that turn your task into a `msg`. The idea is that when the key and duration are
-applied in, it should mirror the Task.perform type signature.
+multiple things at once), a duration (in milliseconds), and two mapping
+functions that turn your task into a `msg`. The idea is that when the key and
+duration are applied in, it should mirror the Task.perform type signature.
 
     perform : (a -> msg) -> (b -> msg) -> Task a b -> Cmd msg
     perform =
@@ -53,6 +57,7 @@ init =
     Task.succeed (Dict.empty)
 
 
+(&>) : Task a b -> Task a c -> Task a c
 (&>) t1 t2 =
     Task.andThen t1 (\_ -> t2)
 
@@ -69,14 +74,23 @@ onEffects router cmds state =
 
         (Debounce key delay task) :: rest ->
             let
-                state' =
-                    Dict.insert key task state
+                updateState v =
+                    Dict.insert key v state
             in
-                if Dict.get key state == Nothing then
-                    Process.spawn (eventuallyExecute router key delay)
-                        &> onEffects router rest state'
-                else
-                    onEffects router rest state'
+                Process.spawn
+                    (maybeKill (Maybe.map snd <| Dict.get key state)
+                        &> eventuallyExecute router key delay
+                    )
+                    `Task.andThen` (onEffects router rest
+                                        << updateState
+                                        << (,) task
+                                   )
+
+
+maybeKill : Maybe Process.Id -> Task x ()
+maybeKill pid =
+    Maybe.map Process.kill pid
+        |> Maybe.withDefault (Task.succeed ())
 
 
 eventuallyExecute : Platform.Router msg Msg -> String -> Float -> Task x ()
@@ -89,7 +103,7 @@ onSelfMsg : Platform.Router msg Msg -> Msg -> State msg -> Task Never (State msg
 onSelfMsg router selfMsg state =
     case selfMsg of
         Execute key ->
-            maybeExecuteTask router (Dict.get key state)
+            Process.spawn (maybeExecuteTask router (Maybe.map fst <| Dict.get key state))
                 &> Task.succeed (Dict.remove key state)
 
 
@@ -98,8 +112,8 @@ maybeExecuteTask router mTask =
     case mTask of
         Just task ->
             task
-                `Task.andThen` (\msg -> Platform.sendToApp router msg)
-                `Task.onError` (\msg -> Platform.sendToApp router msg)
+                `Task.andThen` Platform.sendToApp router
+                `Task.onError` Platform.sendToApp router
 
         Nothing ->
             Task.succeed ()

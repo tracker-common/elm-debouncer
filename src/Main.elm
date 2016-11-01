@@ -6,7 +6,6 @@ import Html.Events as Html
 import Html.Attributes as Attr
 import Task exposing (Task)
 import Debouncer
-import String
 
 
 main : Program Never
@@ -50,13 +49,13 @@ update msg ( query, result ) =
 
 computeResult : String -> Cmd Msg
 computeResult query =
-    lazyTask (\_ -> spin 2500000 query)
+    lazyTask (\_ -> spin 5000000 query)
         |> debounceQuery identity ResultComputed
 
 
 debounceQuery : (a -> msg) -> (b -> msg) -> Task a b -> Cmd msg
 debounceQuery =
-    Debouncer.debounce "query" 375
+    Debouncer.debounce "query" 300
 
 
 lazyTask : (() -> a) -> Task x a
