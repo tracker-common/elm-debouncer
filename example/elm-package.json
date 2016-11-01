@@ -1,14 +1,16 @@
 {
     "version": "1.0.0",
-    "summary": "A debouncer using an effects manager",
+    "summary": "A debouncer example",
     "repository": "https://github.com/mceldeen/elm-debouncer.git",
     "license": "BSD3",
     "source-directories": [
-        "src"
+        ".",
+        "../src"
     ],
-    "exposed-modules": ["Debouncer"],
+    "exposed-modules": [],
     "dependencies": {
         "elm-lang/core": "4.0.5 <= v < 5.0.0",
+        "elm-lang/html": "1.1.0 <= v < 2.0.0"
     },
     "elm-version": "0.17.1 <= v < 0.18.0"
 }
